@@ -27,10 +27,13 @@ pygame.mixer.music.play()
 # 載入圖片 convert 轉成pygame 易讀檔案
 background = pygame.image.load("./img/background450.png").convert()
 great_background = pygame.image.load("./img/Great.png").convert()
-
+button_line_image = []
+for i in range(1, 3):
+    Bottom_Line_Image = pygame.image.load(f"./img/bottom_line_{i}.png").convert()
+    Bottom_Line_Image.set_colorkey(WHITE)
+    button_line_image.append(Bottom_Line_Image)
 image_scale = 180
 button_image = {5: [], 7: [], 'sqrt': []}
-name_list = [5]
 for j in button_image:
     for i in range(1, 7):
         Button = pygame.image.load(f"./img/{j}_{i}.png").convert()
@@ -54,6 +57,7 @@ class button (pygame.sprite.Sprite):
         self.keydown = True
         self.downy = 4
         self.downx = 1
+
     def update(self):
         now = pygame.time.get_ticks()
         if now - self.last_update > self.frame:     # 瞬間當下時間 跟 創建時間差 到換圖時間(ex.時間差到50ms時換下張圖)
@@ -85,23 +89,59 @@ class button (pygame.sprite.Sprite):
                     keydown_add7 = False
                     keydown_sqrt = False
 
-all_sprites = pygame.sprite.Group()
-class TEXT :
+
+class TEXT:
+
     def __init__(self):
         self.x = WIDTH/4-100
         self.y = 100
-        self.length = 1
+        self.length = 0
+
     def reset(self):
         self.x = WIDTH/4-55
         self.y = 100
-        self.length = 1
+        self.length = 0
+
     def update(self):
         self.x += 65
         self.length += 1
+
     def change_line(self):
         self.x = WIDTH/4-55
         self.y += 55
-        self.length = 1
+        self.length = 0
+
+
+class BottomLine(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = button_line_image[0]
+        self.tabx = 65
+        self.taby = 55
+        self.rect = self.image.get_rect()
+        self.last_update = pygame.time.get_ticks()
+        self.rect.y = 70
+        self.frame_rate = 200
+        self.frame = 0
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = pygame.time.get_ticks()
+            self.frame += 1
+            self.frame %= 2
+            center = self.rect.center
+            self.image = button_line_image[self.frame]
+            self.rect = self.image.get_rect()
+            self.rect.center = center
+
+    def reset(self, length, text_change_line_times):
+        self.rect.y = 70 + text_change_line_times * self.taby
+        self.rect.x = WIDTH/4 - 150 + (length+1) * self.tabx
+        if self.rect.x == WIDTH/4 + 240:
+            self.rect.x = WIDTH/4 - 85
+
 
 class Great(pygame.sprite.Sprite):
     def __init__(self):
@@ -112,6 +152,7 @@ class Great(pygame.sprite.Sprite):
         self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH/2-13, HEIGHT/2+20)
+
     def update(self):
         self.now = pygame.time.get_ticks()
         if self.now - self.last_update < self.show_time:
@@ -120,7 +161,10 @@ class Great(pygame.sprite.Sprite):
         else:
             self.kill()
 
+
 font_name = pygame.font.match_font('arial')  # 取的字型
+
+
 def draw_text(surface, text, size, color, x, y):
     font = pygame.font.Font(font_name, size)    # 給定字型和大小# font:字型 render:使成為
     text_surface = font.render(text, True, color)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
@@ -130,87 +174,101 @@ def draw_text(surface, text, size, color, x, y):
     surface.blit(text_surface, text_rect)
 
 # 取的時間物件
+
+
+all_sprites = pygame.sprite.Group()
+
 clock = pygame.time.Clock()
+
 need_list = [2, 10, 14]
-index = 0
-ans_list = [5]
-check_list = {5: True}
-locate_text = TEXT()
-# 遊戲迴圈
-running = True
-while running and index < 3:
-    clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
-    # 取得輸入
-    for event in pygame.event.get():     # 回傳所有動作
-        if event.type == pygame.QUIT:    # 如果按下X ,pygame.QUIT 是按下X後的型態
-            running = False             # 跳出迴圈
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_5:
-                add5 = button((image_scale/2-10, HEIGHT-image_scale/2), 5)
-                all_sprites.add(add5)
-                keydown_add5 = True
-                ans_list.append(ans_list[-1]+5)
-                if check_list.get(ans_list[-1]):
-                    running = False
-                else:
-                    check_list[ans_list[-1]] = True
-            if event.key == pygame.K_7:
-                add7 = button((WIDTH/2+10, HEIGHT-image_scale/2), 7)
-                all_sprites.add(add7)
-                keydown_add7 = True
-                ans_list.append(ans_list[-1]+7)
-                if check_list.get(ans_list[-1]):
-                    running = False
-                else:
-                    check_list[ans_list[-1]] = True
-            if event.key == pygame.K_s:
-                Sqrt = button((WIDTH-image_scale/2+23, HEIGHT-image_scale/2), 'sqrt')
-                all_sprites.add(Sqrt)
-                keydown_sqrt = True
-                append_number = round(sqrt(ans_list[-1]), 2)  # round 四捨五入到小數兩位
-                if append_number - int(append_number) == 0:
-                    ans_list.append(int(append_number))
-                else:
-                    ans_list.append(append_number)
-                if check_list.get(ans_list[-1]):
-                    running = False
-                else:
-                    check_list[ans_list[-1]] = True
-    # 檢查條件
-    if ans_list[-1]-int(ans_list[-1]) != 0:
-        running = False
-    if ans_list[-1] > 50:
-        running = False
+game = True
+while game:
+    ans_list = [5]
+    check_list = {5: True}
+    index = 0
+    locate_text = TEXT()
+    bottom_line = BottomLine()
+    all_sprites.add(bottom_line)
+    for event in pygame.event.get():  # 回傳所有動作
+        if event.type == pygame.QUIT:  # 如果按下X ,pygame.QUIT 是按下X後的型態
+            game = False  # 跳出迴圈
+    # 遊戲迴圈
+    running = True
+    while running and index < 3:
+        clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
+        # 取得輸入
+        for event in pygame.event.get():     # 回傳所有動作
+            if event.type == pygame.QUIT:    # 如果按下X ,pygame.QUIT 是按下X後的型態
+                running = False             # 跳出迴圈
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_5:
+                    add5 = button((image_scale/2-10, HEIGHT-image_scale/2), 5)
+                    all_sprites.add(add5)
+                    keydown_add5 = True
+                    ans_list.append(ans_list[-1]+5)
+                    if check_list.get(ans_list[-1]):
+                        running = False
+                    else:
+                        check_list[ans_list[-1]] = True
+                if event.key == pygame.K_7:
+                    add7 = button((WIDTH/2+10, HEIGHT-image_scale/2), 7)
+                    all_sprites.add(add7)
+                    keydown_add7 = True
+                    ans_list.append(ans_list[-1]+7)
+                    if check_list.get(ans_list[-1]):
+                        running = False
+                    else:
+                        check_list[ans_list[-1]] = True
+                if event.key == pygame.K_s:
+                    Sqrt = button((WIDTH-image_scale/2+23, HEIGHT-image_scale/2), 'sqrt')
+                    all_sprites.add(Sqrt)
+                    keydown_sqrt = True
+                    append_number = round(sqrt(ans_list[-1]), 2)  # round 四捨五入到小數兩位
+                    if append_number - int(append_number) == 0:
+                        ans_list.append(int(append_number))
+                    else:
+                        ans_list.append(append_number)
+                    if check_list.get(ans_list[-1]):
+                        running = False
+                    else:
+                        check_list[ans_list[-1]] = True
+        # 檢查條件
+        if ans_list[-1]-int(ans_list[-1]) != 0:
+            running = False
+        if ans_list[-1] > 50:
+            running = False
 
-    # 更新顯示
-    screen.fill(WHITE)
-    screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
-    # 更新button
-    if not keydown_add5:
-        screen.blit(button_image[5][0], (-15, HEIGHT-image_scale))
-    if not keydown_add7:
-        screen.blit(button_image[7][0], (145, HEIGHT - image_scale))
-    if not keydown_sqrt:
-        screen.blit(button_image['sqrt'][0], (290, HEIGHT-image_scale))
-    all_sprites.update()
+        # 更新顯示
+        screen.fill(WHITE)
+        screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
+        # 更新button
+        if not keydown_add5:
+            screen.blit(button_image[5][0], (-15, HEIGHT-image_scale))
+        if not keydown_add7:
+            screen.blit(button_image[7][0], (145, HEIGHT - image_scale))
+        if not keydown_sqrt:
+            screen.blit(button_image['sqrt'][0], (290, HEIGHT-image_scale))
+        all_sprites.update()
+        locate_text.reset()
+        for i in ans_list:
+            if i in need_list[0:index+1:]:
+                draw_text(screen, f"{i}", 50, RED, locate_text.x, locate_text.y)
+            else:
+                draw_text(screen, f"{i}", 50, BLACK, locate_text.x, locate_text.y)
+            locate_text.update()
+            if locate_text.length > 5:
+                locate_text.change_line()
+        bottom_line.reset(locate_text.length, len(ans_list)//6)
+        if keydown_add5 or keydown_add7 or keydown_sqrt:
+            bottom_line.last_update = pygame.time.get_ticks()
 
-    locate_text.reset()
-    for i in ans_list:
-        if i in need_list[0:index+1:]:
-            draw_text(screen, f"{i}", 50, RED, locate_text.x, locate_text.y)
-        else:
-            draw_text(screen, f"{i}", 50, BLACK, locate_text.x, locate_text.y)
-        locate_text.update()
-        if locate_text.length > 6:
-            locate_text.change_line()
-    if need_list[index] == ans_list[-1]:
-        index += 1
-        great = Great()
-        all_sprites.add(great)
-    all_sprites.draw(screen)
-    pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
-
-
+        if need_list[index] == ans_list[-1]:
+            index += 1
+            great = Great()
+            all_sprites.add(great)
+        all_sprites.draw(screen)
+        pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
+    bottom_line.kill()
 end = False
 while end:
     for event in pygame.event.get():     # 回傳所有動作
