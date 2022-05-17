@@ -18,8 +18,6 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("escape room")    # 視窗標題
 
-white_stock = pygame.Rect(0, 0, 200, 100)
-white_stock.center = (WIDTH/2, HEIGHT/2)
 
 # 背景音樂
 pygame.mixer.init()
@@ -28,8 +26,9 @@ pygame.mixer.music.play()
 
 # 載入圖片 convert 轉成pygame 易讀檔案
 background = pygame.image.load("./img/background450.png").convert()
-image_scale = 180
+great_background = pygame.image.load("./img/Great.png").convert()
 
+image_scale = 180
 button_image = {5: [], 7: [], 'sqrt': []}
 name_list = [5]
 for j in button_image:
@@ -40,6 +39,8 @@ for j in button_image:
 keydown_add5 = False
 keydown_add7 = False
 keydown_sqrt = False
+
+
 class button (pygame.sprite.Sprite):
     def __init__(self, center, button_name):
         pygame.sprite.Sprite.__init__(self)
@@ -70,7 +71,7 @@ class button (pygame.sprite.Sprite):
                     self.keydown = False
             else:
                 self.frame -= 1
-                if self.frame > 0:
+                if self.frame >= 0:
                     self.image = button_image[self.name][self.frame]
                     center = self.rect.center
                     self.rect = self.image.get_rect()
@@ -101,6 +102,24 @@ class TEXT :
         self.x = WIDTH/4-55
         self.y += 55
         self.length = 1
+
+class Great(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.last_update = pygame.time.get_ticks()
+        self.show_time = 1000
+        self.image = great_background
+        self.image.set_colorkey(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH/2-13, HEIGHT/2+20)
+    def update(self):
+        self.now = pygame.time.get_ticks()
+        if self.now - self.last_update < self.show_time:
+            self.now = pygame.time.get_ticks()
+            draw_text(self.image, f"GREAT!", 50, BLACK, self.rect.width/2+10, self.rect.height/2-30)
+        else:
+            self.kill()
+
 font_name = pygame.font.match_font('arial')  # 取的字型
 def draw_text(surface, text, size, color, x, y):
     font = pygame.font.Font(font_name, size)    # 給定字型和大小# font:字型 render:使成為
@@ -136,7 +155,7 @@ while running and index < 3:
                 else:
                     check_list[ans_list[-1]] = True
             if event.key == pygame.K_7:
-                add7 = button((image_scale/2-10, HEIGHT-image_scale/2), 7)
+                add7 = button((WIDTH/2+10, HEIGHT-image_scale/2), 7)
                 all_sprites.add(add7)
                 keydown_add7 = True
                 ans_list.append(ans_list[-1]+7)
@@ -145,7 +164,7 @@ while running and index < 3:
                 else:
                     check_list[ans_list[-1]] = True
             if event.key == pygame.K_s:
-                Sqrt = button((image_scale/2-10, HEIGHT-image_scale/2), 'sqrt')
+                Sqrt = button((WIDTH-image_scale/2+23, HEIGHT-image_scale/2), 'sqrt')
                 all_sprites.add(Sqrt)
                 keydown_sqrt = True
                 append_number = round(sqrt(ans_list[-1]), 2)  # round 四捨五入到小數兩位
@@ -166,6 +185,7 @@ while running and index < 3:
     # 更新顯示
     screen.fill(WHITE)
     screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
+    # 更新button
     if not keydown_add5:
         screen.blit(button_image[5][0], (-15, HEIGHT-image_scale))
     if not keydown_add7:
@@ -185,14 +205,10 @@ while running and index < 3:
             locate_text.change_line()
     if need_list[index] == ans_list[-1]:
         index += 1
-        pygame.draw.rect(screen, (69, 255, 255), white_stock)
-        draw_text(screen, f"GREAT!", 50, BLACK, white_stock.centerx, white_stock.centery)
-        all_sprites.draw(screen)
-        pygame.display.update()
-        time.sleep(2)
-    else:
-        all_sprites.draw(screen)
-        pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
+        great = Great()
+        all_sprites.add(great)
+    all_sprites.draw(screen)
+    pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
 
 
 end = False
