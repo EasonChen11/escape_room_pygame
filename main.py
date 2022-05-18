@@ -17,7 +17,7 @@ pygame.init()
 # 視窗大小
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("escape room")    # 視窗標題
-
+all_sprites = pygame.sprite.Group()
 
 # 背景音樂
 pygame.mixer.init()
@@ -26,7 +26,8 @@ pygame.mixer.music.play()
 
 # 載入圖片 convert 轉成pygame 易讀檔案
 background = pygame.image.load("./img/background450.png").convert()
-text_background = pygame.image.load("./img/Great.png").convert()
+great_background = pygame.image.load("./img/Great.png").convert()
+try_again_background = pygame.image.load("./img/try_again.png").convert()
 button_line_image = []
 for i in range(1, 3):
     Bottom_Line_Image = pygame.image.load(f"./img/bottom_line_{i}.png").convert()
@@ -55,7 +56,7 @@ class button (pygame.sprite.Sprite):
         self.sensor_rect.center = center
         self.last_update = pygame.time.get_ticks()
         self.frame_rate = 5000
-        self.keydown = True
+        self.keydown = False
         self.downy = 4
         self.downx = 1
 
@@ -66,6 +67,7 @@ class button (pygame.sprite.Sprite):
         else:
             if self.sensor_rect.collidepoint(mouse_press):
                 if pygame.mouse.get_pressed()[0]:
+                    self.keydown = True
                     global running
                     self.last_update = pygame.time.get_ticks()
                     self.click = True
@@ -88,6 +90,7 @@ class button (pygame.sprite.Sprite):
                         running = False
                     if ans_list[-1] > 50:
                         running = False
+
     def animationOfButton(self):
         now = pygame.time.get_ticks()
         if now - self.last_update > self.frame:     # 瞬間當下時間 跟 創建時間差 到換圖時間(ex.時間差到50ms時換下張圖)
@@ -120,6 +123,7 @@ class button (pygame.sprite.Sprite):
                         self.frame = 0
                         self.keydown = True
                         self.click = False
+
 
 class list_TEXT:
 
@@ -187,26 +191,62 @@ class Great(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.last_update = pygame.time.get_ticks()
         self.show_time = 1000
-        self.image = text_background
+        self.image = great_background
         self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH/2-13, HEIGHT/2+20)
+        self.rect.center = (WIDTH/2, HEIGHT/2+20)
+        self.now = pygame.time.get_ticks()
+        self.text = f"GREAT!"
+        self.size = 50
+        self.color = BLACK
 
     def update(self):
         self.now = pygame.time.get_ticks()
         if self.now - self.last_update < self.show_time:
             self.now = pygame.time.get_ticks()
-            self.draw(self.image, f"GREAT!", 50, BLACK, self.rect.width/2+10, self.rect.height/2-30)
+            self.draw(self.rect.width/2+10, self.rect.height/2)
         else:
             self.kill()
 
-    def draw(self, surface, text, size, color, x, y):
-        font = pygame.font.Font(font_name, size)  # 給定字型和大小# font:字型 render:使成為
-        self.text_surface = font.render(text, True, color)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
-        self.text_rect = self.text_surface.get_rect()
-        self.text_rect.centerx = x
-        self.text_rect.centery = y
-        surface.blit(self.text_surface, self.text_rect)
+    def draw(self, x, y):
+        font = pygame.font.Font(font_name, self.size)  # 給定字型和大小# font:字型 render:使成為
+        text_surface = font.render(self.text, True, self.color)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        text_rect = text_surface.get_rect()
+        text_rect.centerx = x
+        text_rect.centery = y
+        self.image.blit(text_surface, text_rect)
+
+
+class TryAgain(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.last_update = pygame.time.get_ticks()
+        # self.sensor_rect = pygame.Rect(center, (120, 110))
+        self.image = try_again_background
+        self.image.set_colorkey(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH/2, HEIGHT/2+200)
+        self.text = f"Try again!"
+        self.size = 40
+        self.color = (68, 68, 68)
+        self.show = True
+
+    def update(self):
+        if self.show:
+            self.draw(self.rect.width / 2 + 10, self.rect.height / 2)
+            # screen.blit(self.image, self.rect.center)
+        else:
+            self.kill()
+
+    def draw(self, x, y):
+        font = pygame.font.Font(font_name, self.size)  # 給定字型和大小# font:字型 render:使成為
+        text_surface = font.render(self.text, True, self.color)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        text_rect = text_surface.get_rect()
+        text_rect.centerx = x
+        text_rect.centery = y
+        self.image.blit(text_surface, text_rect)
+
 
 font_name = pygame.font.match_font('arial')  # 取的字型
 
@@ -219,67 +259,73 @@ def draw_text(surface, text, size, color, x, y):
     text_rect.centery = y
     surface.blit(text_surface, text_rect)
 
+# def initial_game():
+
+def try_again_func():
+    try_again = TryAgain()
+    all_sprites.add(try_again)
+    while try_again.show:
+        for event in pygame.event.get():     # 回傳所有動作
+            if event.type == pygame.MOUSEBUTTONDOWN:    # 如果按下X ,pygame.QUIT 是按下X後的型態
+                mouse_pos = pygame.mouse.get_pos()
+                if try_again.rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0]:
+                    try_again.show = False             # 跳出迴圈
+        screen.fill(WHITE)
+        screen.blit(background, (0, 0))  # blit(畫) 第一個是圖片，第二個是位置
+        locate_text.reset()
+        for i in ans_list:
+            if i in need_list[0:index+1:]:
+                locate_text.draw(screen, f"{i}", 50, RED)
+            else:
+                locate_text.draw(screen, f"{i}", 50, BLACK)
+            locate_text.update()
+            if locate_text.length > 5:
+                locate_text.change_line()
+        try_again.update()
+        all_sprites.draw(screen)
+        pygame.display.update()
+    time.sleep(0.2)
+
+
+
 # 取的時間物件
-
-
-all_sprites = pygame.sprite.Group()
-add5 = button((image_scale / 2 - 16, HEIGHT - image_scale / 2), 5)
-all_sprites.add(add5)
-add7 = button((WIDTH / 2 + 4, HEIGHT - image_scale / 2), 7)
-all_sprites.add(add7)
-Sqrt = button((WIDTH - image_scale / 2 + 17, HEIGHT - image_scale / 2), 'sqrt')
-all_sprites.add(Sqrt)
 clock = pygame.time.Clock()
 
-need_list = [2, 10, 14]
+need_list = [10, 10, 14]
 game = True
+running = True
 while game:
+    # initial_game()
+    # set origin
+    index = 0
     ans_list = [5]
     check_list = {5: True}
-    index = 0
-    locate_text = list_TEXT()
+    # create sprites
+    add5 = button((image_scale / 2 - 16, HEIGHT - image_scale / 2), 5)
+    all_sprites.add(add5)
+    add7 = button((WIDTH / 2 + 4, HEIGHT - image_scale / 2), 7)
+    all_sprites.add(add7)
+    Sqrt = button((WIDTH - image_scale / 2 + 17, HEIGHT - image_scale / 2), 'sqrt')
+    all_sprites.add(Sqrt)
     bottom_line = BottomLine()
     all_sprites.add(bottom_line)
-    for event in pygame.event.get():  # 回傳所有動作
-        if event.type == pygame.QUIT:  # 如果按下X ,pygame.QUIT 是按下X後的型態
-            game = False  # 跳出迴圈
-    # 遊戲迴圈
+    locate_text = list_TEXT()
+
+    # for event in pygame.event.get():  # 回傳所有動作
+    #     if event.type == pygame.MOUSEBUTTONUP:  # 如果按下X ,pygame.QUIT 是按下X後的型態
     running = True
+
+    # 遊戲迴圈
     while running and index < 3:
+        screen.fill(WHITE)
+
         clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
         # 取得輸入
         for event in pygame.event.get():     # 回傳所有動作
             if event.type == pygame.QUIT:    # 如果按下X ,pygame.QUIT 是按下X後的型態
                 running = False             # 跳出迴圈
-            # elif event.type == pygame.KEYDOWN:
-                # if event.key == pygame.K_5:
-                # if event.key == pygame.K_7:
-                #     if check_list.get(ans_list[-1]):
-                #         running = False
-                #     else:
-                #         check_list[ans_list[-1]] = True
-                # if event.key == pygame.K_s:
-                #     append_number = round(sqrt(ans_list[-1]), 2)  # round 四捨五入到小數兩位
-                #     if check_list.get(ans_list[-1]):
-                #         running = False
-                #     else:
-                #         check_list[ans_list[-1]] = True
-        # 檢查條件
-        # if ans_list[-1]-int(ans_list[-1]) != 0:
-        #     running = False
-        # if ans_list[-1] > 50:
-        #     running = False
-
         # 更新顯示
-        screen.fill(WHITE)
         screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
-        # 更新button
-        # if not keydown_add5:
-        #     screen.blit(button_image[5][0], (-15, HEIGHT-image_scale))
-        # if not keydown_add7:
-        #     screen.blit(button_image[7][0], (145, HEIGHT - image_scale))
-        # if not keydown_sqrt:
-        #     screen.blit(button_image['sqrt'][0], (290, HEIGHT-image_scale))
         all_sprites.update()
         locate_text.reset()
         for i in ans_list:
@@ -298,7 +344,13 @@ while game:
             all_sprites.add(great)
         all_sprites.draw(screen)
         pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
+    try_again_func()
+    # reset all sprites
+    add5.kill()
+    add7.kill()
+    Sqrt.kill()
     bottom_line.kill()
+
 end = False
 while end:
     for event in pygame.event.get():     # 回傳所有動作
