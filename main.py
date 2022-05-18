@@ -33,6 +33,10 @@ for i in range(1, 3):
     Bottom_Line_Image = pygame.image.load(f"./img/bottom_line_{i}.png").convert()
     Bottom_Line_Image.set_colorkey(WHITE)
     button_line_image.append(Bottom_Line_Image)
+
+font_name = pygame.font.match_font('arial')  # 取的字型
+
+
 image_scale = 180
 button_image = {5: [], 7: [], 'sqrt': []}
 for j in button_image:
@@ -248,16 +252,82 @@ class TryAgain(pygame.sprite.Sprite):
         self.image.blit(text_surface, text_rect)
 
 
-font_name = pygame.font.match_font('arial')  # 取的字型
+def show_rule():
+    rule_text = []
+    rule_text.append("1.the control panel has three buttons")
+    rule_text.append("that change the display +5 +7 and square root")
+    rule_text.append("2.the display stats at 5")
+    rule_text.append("3.to solve the puzzle, the display must output ")
+    rule_text.append("the number 2, 10, 14,in that order")
+    rule_text.append("the display can safely output other numbers, but:")
+    rule_text.append("a)it can't output same number twice")
+    rule_text.append("b)it can't output number bigger than 50")
+    rule_text.append("c)it can't output decimal")
+    rule_text.append("d)it can't output same number twice")
+    rule_text.append("keydown any key to ply game")
+    surface = pygame.Surface((WIDTH, HEIGHT)).convert()
+    surface.fill(WHITE)
+    surface.get_rect(center=(0, 0))
+    for l in range(len(rule_text)):
+        if l == len(rule_text)-1:
+            font = pygame.font.Font(font_name, 40)  # 給定字型和大小# font:字型 render:使成為
+            text_surface = font.render(rule_text[l], True, RED)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        else:
+            font = pygame.font.Font(font_name, 25)  # 給定字型和大小# font:字型 render:使成為
+            text_surface = font.render(rule_text[l], True, BLACK)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        text_rect = text_surface.get_rect()
+        text_rect.left = 0
+        text_rect.centery = 50 + 50 * l
+        surface.blit(text_surface, text_rect)
+    init_running = True
+    while init_running:
+        for event in pygame.event.get():  # 回傳所有動作
+            if event.type == pygame.KEYDOWN:
+                init_running = False  # 跳出迴圈
+        screen.blit(surface, (0, 0))
+        pygame.display.update()
 
 
-def draw_text(surface, text, size, color, x, y):
-    font = pygame.font.Font(font_name, size)    # 給定字型和大小# font:字型 render:使成為
-    text_surface = font.render(text, True, color)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
-    text_rect = text_surface.get_rect()
-    text_rect.centerx = x
-    text_rect.centery = y
-    surface.blit(text_surface, text_rect)
+class Rule:
+
+    def __init__(self):
+        self.sensor_rect = pygame.Rect((0, 0), (40, 40))
+        self.text_background = pygame.Surface((40, 40)).convert()
+        self.text_background.fill(WHITE)
+        self.rect = self.text_background.get_rect(center=(0, 0))
+        self.text = f"?"
+        self.size = 40
+        self.color = BLACK
+        self.click = False
+        self.draw(self.sensor_rect.width / 2, self.sensor_rect.height / 2)
+
+    def update(self):
+        mouse_press = pygame.mouse.get_pos()
+        screen.blit(self.text_background, (0, 0))
+        if self.click:
+            self.click = False
+            show_rule()
+        if self.sensor_rect.collidepoint(mouse_press):
+            if pygame.mouse.get_pressed()[0]:
+                self.click = True
+            # screen.blit(self.image, self.rect.center)
+
+    def draw(self, x, y):
+        font = pygame.font.Font(font_name, self.size)  # 給定字型和大小# font:字型 render:使成為
+        text_surface = font.render(self.text, True, self.color)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        text_rect = text_surface.get_rect()
+        text_rect.centerx = x
+        text_rect.centery = y
+        self.text_background.blit(text_surface, text_rect)
+
+
+# def draw_text(surface, text, size, color, x, y):
+#     font = pygame.font.Font(font_name, size)    # 給定字型和大小# font:字型 render:使成為
+#     text_surface = font.render(text, True, color)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+#     text_rect = text_surface.get_rect()
+#     text_rect.centerx = x
+#     text_rect.centery = y
+#     surface.blit(text_surface, text_rect)
 
 # def initial_game():
 
@@ -289,9 +359,10 @@ def try_again_func():
 
 
 # 取的時間物件
+
 clock = pygame.time.Clock()
 
-need_list = [10, 10, 14]
+need_list = [2, 10, 14]
 game = True
 running = True
 while game:
@@ -300,6 +371,7 @@ while game:
     index = 0
     ans_list = [5]
     check_list = {5: True}
+    click_rule = Rule()
     # create sprites
     add5 = button((image_scale / 2 - 16, HEIGHT - image_scale / 2), 5)
     all_sprites.add(add5)
@@ -327,6 +399,7 @@ while game:
         # 更新顯示
         screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
         all_sprites.update()
+        click_rule.update()
         locate_text.reset()
         for i in ans_list:
             if i in need_list[0:index+1:]:
