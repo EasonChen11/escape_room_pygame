@@ -3,6 +3,7 @@
 import time
 import pygame
 import random
+import os
 from math import *
 FPS = 60    # 60針
 WHITE = (255, 255, 255)
@@ -40,8 +41,8 @@ for i in range(1, 3):
 
 clock = pygame.time.Clock()
 
-font_name = pygame.font.match_font('font.ttf')  # 取的字型
-
+font_name = os.path.join("./font.ttf")  # 取的字型
+number_name = pygame.font.match_font('arial')
 image_scale = 180
 button_image = {5: [], 7: [], 'sqrt': []}
 for j in button_image:
@@ -156,7 +157,7 @@ class list_TEXT:
         self.length = 0
 
     def draw(self, surface, text, size, color):
-        font = pygame.font.Font(font_name, size)  # 給定字型和大小# font:字型 render:使成為
+        font = pygame.font.Font(number_name, size)  # 給定字型和大小# font:字型 render:使成為
         self.text_surface = font.render(text, True, color)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
         self.text_rect = self.text_surface.get_rect()
         self.text_rect.centerx = self.x
@@ -299,8 +300,8 @@ class Finish:
         self.background = pygame.Surface((450, 200)).convert()
         self.background.fill(FINISH_COLOR)
         self.rect = self.background.get_rect(center=(WIDTH/2, 500))
-        self.text = [f"太棒了，你完成解謎了!", f"密碼是:按了多少次+5", f"再玩一次~~"]
-        self.size = [70, 90, 90]
+        self.text = [f"太棒了，你完成解謎了!", f"密碼是按了多少次+5", f"再玩一次~~"]
+        self.size = [40, 40, 50]
         self.color = [BLACK, BLACK, RED]
         self.finish_running = True
         # screen.blit(self.image, self.rect.center)
@@ -310,7 +311,7 @@ class Finish:
             font = pygame.font.Font(font_name, self.size[a])  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(self.text[a], True, self.color[a])  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
             text_rect = text_surface.get_rect()
-            text_rect.left = 10 + (a//3) * 120
+            text_rect.left = 10 + (a//2) * 80
             text_rect.centery = 40 + 65 * a
             self.background.blit(text_surface, text_rect)
 
@@ -353,16 +354,21 @@ def show_rule():
     rule_text.append("b)顯示器上的數字不能大於50)")
     rule_text.append("c)不能出現小數(開根號不能有小數)")
     rule_text.append("6.可以按下左上角'?'顯示規則")
-    rule_text.append("按任意鍵開始遊戲!")
+    global running
+    if running:
+        rule_text.append("按任意鍵繼續遊戲!")
+    else:
+        rule_text.append("按任意鍵開始遊戲!")
+
     surface = pygame.Surface((WIDTH, HEIGHT)).convert()
     surface.fill((232, 255, 255))
     surface.get_rect(center=(0, 0))
     for l in range(len(rule_text)):
         if l == len(rule_text)-1:
-            font = pygame.font.Font(font_name, 90)  # 給定字型和大小# font:字型 render:使成為
+            font = pygame.font.Font(font_name, 50)  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(rule_text[l], True, RED)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
         else:
-            font = pygame.font.Font(font_name, 50)  # 給定字型和大小# font:字型 render:使成為
+            font = pygame.font.Font(font_name, 20)  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(rule_text[l], True, BLACK)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
         text_rect = text_surface.get_rect()
         if l == len(rule_text)-1:
@@ -376,7 +382,7 @@ def show_rule():
         clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
         for event in pygame.event.get():  # 回傳所有動作
             if event.type == pygame.QUIT:
-                global game, running
+                global game
                 game = False
                 running = False
                 init_running = False
@@ -421,7 +427,7 @@ def show_finish():
 
 need_list = [2, 10, 14]
 game = True
-running = True
+running = False
 first_start = True
 
 while game:
@@ -494,6 +500,7 @@ while game:
             Sqrt.kill()
             bottom_line.kill()
             show_finish()
+            running = False
             first_start = True
 
 pygame.mixer.music.stop()
