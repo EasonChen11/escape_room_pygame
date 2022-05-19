@@ -18,6 +18,8 @@ pygame.init()
 # 視窗大小
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("escape room")    # 視窗標題
+icon_image = pygame.image.load("./img/icon.png").convert()
+pygame.display.set_icon(icon_image)
 all_sprites = pygame.sprite.Group()
 
 # 背景音樂
@@ -36,8 +38,9 @@ for i in range(1, 3):
     Bottom_Line_Image.set_colorkey(WHITE)
     button_line_image.append(Bottom_Line_Image)
 
-font_name = pygame.font.match_font('arial')  # 取的字型
+clock = pygame.time.Clock()
 
+font_name = pygame.font.match_font('font.ttf')  # 取的字型
 
 image_scale = 180
 button_image = {5: [], 7: [], 'sqrt': []}
@@ -203,7 +206,7 @@ class Great(pygame.sprite.Sprite):
         self.rect.center = (WIDTH/2, HEIGHT/2+20)
         self.now = pygame.time.get_ticks()
         self.text = f"GREAT!"
-        self.size = 50
+        self.size = 80
         self.color = BLACK
 
     def update(self):
@@ -234,7 +237,7 @@ class TryAgain(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH/2, HEIGHT/2+200)
         self.text = f"Try again!"
-        self.size = 40
+        self.size = 60
         self.color = (68, 68, 68)
         self.show = True
 
@@ -252,7 +255,6 @@ class TryAgain(pygame.sprite.Sprite):
         text_rect.centerx = x
         text_rect.centery = y
         self.image.blit(text_surface, text_rect)
-
 
 
 class Rule:
@@ -287,36 +289,37 @@ class Rule:
         text_rect.centery = y
         self.text_background.blit(text_surface, text_rect)
 
-class Finish():
+
+class Finish:
 
     def __init__(self):
-        self.sensor_rect = pygame.Rect((0, 0), (WIDTH, 30))
+        self.sensor_rect = pygame.Rect((0, 0), (WIDTH, 40))
         self.sensor_rect.left = 0
         self.sensor_rect.centery = HEIGHT - self.sensor_rect.height
         self.background = pygame.Surface((450, 200)).convert()
         self.background.fill(FINISH_COLOR)
         self.rect = self.background.get_rect(center=(WIDTH/2, 500))
-        self.text = [f"Great! you finish the game.", f"the password is", f"how much times you add 5", f"play again~~"]
-        self.size = [25, 40, 40, 40]
-        self.color = [BLACK, BLACK, BLACK, RED]
+        self.text = [f"太棒了，你完成解謎了!", f"密碼是:按了多少次+5", f"再玩一次~~"]
+        self.size = [70, 90, 90]
+        self.color = [BLACK, BLACK, RED]
+        self.finish_running = True
         # screen.blit(self.image, self.rect.center)
 
     def draw(self):
-        for a in range(4):
+        for a in range(len(self.text)):
             font = pygame.font.Font(font_name, self.size[a])  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(self.text[a], True, self.color[a])  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
             text_rect = text_surface.get_rect()
             text_rect.left = 10 + (a//3) * 120
-            text_rect.centery = 20 + 50 * a
+            text_rect.centery = 40 + 65 * a
             self.background.blit(text_surface, text_rect)
 
-
-# def initial_game():
 
 def try_again_func():
     try_again = TryAgain()
     all_sprites.add(try_again)
     while try_again.show:
+        clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
         for event in pygame.event.get():     # 回傳所有動作
             if event.type == pygame.MOUSEBUTTONDOWN:    # 如果按下X ,pygame.QUIT 是按下X後的型態
                 mouse_pos = pygame.mouse.get_pos()
@@ -338,36 +341,45 @@ def try_again_func():
         pygame.display.update()
     time.sleep(0.2)
 
+
 def show_rule():
     rule_text = []
-    rule_text.append("1.the control panel has three buttons")
-    rule_text.append("that change the display +5 +7 and square root")
-    rule_text.append("2.the display stats at 5")
-    rule_text.append("3.to solve the puzzle, the display must output ")
-    rule_text.append("the number 2, 10, 14,in that order")
-    rule_text.append("the display can safely output other numbers, but:")
-    rule_text.append("a)it can't output same number twice")
-    rule_text.append("b)it can't output number bigger than 50")
-    rule_text.append("c)it can't output decimal")
-    rule_text.append("d)it can't output same number twice")
-    rule_text.append("keydown any key to ply game")
+    rule_text.append("1.面板有三個按鈕，+5, +7 和開根號")
+    rule_text.append("2.用滑鼠按下按鈕完成謎題")
+    rule_text.append("3.計數從5開始")
+    rule_text.append("4.顯示器上要必須依序出現2, 10, 14這三個數字")
+    rule_text.append("5.顯示器上可以顯示任何數字，但有些條件:")
+    rule_text.append("a)同一個數字不能出現兩次(包含第一個5)")
+    rule_text.append("b)顯示器上的數字不能大於50)")
+    rule_text.append("c)不能出現小數(開根號不能有小數)")
+    rule_text.append("6.可以按下左上角'?'顯示規則")
+    rule_text.append("按任意鍵開始遊戲!")
     surface = pygame.Surface((WIDTH, HEIGHT)).convert()
     surface.fill((232, 255, 255))
     surface.get_rect(center=(0, 0))
     for l in range(len(rule_text)):
         if l == len(rule_text)-1:
-            font = pygame.font.Font(font_name, 40)  # 給定字型和大小# font:字型 render:使成為
+            font = pygame.font.Font(font_name, 90)  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(rule_text[l], True, RED)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
         else:
-            font = pygame.font.Font(font_name, 25)  # 給定字型和大小# font:字型 render:使成為
+            font = pygame.font.Font(font_name, 50)  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(rule_text[l], True, BLACK)   # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
         text_rect = text_surface.get_rect()
-        text_rect.left = 5
-        text_rect.centery = 50 + 50 * l
+        if l == len(rule_text)-1:
+            text_rect.left = WIDTH/2 - text_rect.width/2 - 10
+        else:
+            text_rect.left = 15
+        text_rect.centery = 50 + 55 * l
         surface.blit(text_surface, text_rect)
     init_running = True
     while init_running:
+        clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
         for event in pygame.event.get():  # 回傳所有動作
+            if event.type == pygame.QUIT:
+                global game, running
+                game = False
+                running = False
+                init_running = False
             if event.type == pygame.KEYDOWN:
                 init_running = False  # 跳出迴圈
         screen.blit(surface, (0, 0))
@@ -377,13 +389,20 @@ def show_rule():
 def show_finish():
     finish = Finish()
     finish.draw()
-    finish_running = True
-    while finish_running:
+    finish.finish_running = True
+    while finish.finish_running:
+        clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
         for event in pygame.event.get():  # 回傳所有動作
+            if event.type == pygame.QUIT:
+                global game, running
+                game = False
+                running = False
+                finish.finish_running = False
+
             if event.type == pygame.MOUSEBUTTONDOWN:  # 如果按下X ,pygame.QUIT 是按下X後的型態
                 mouse_pos = pygame.mouse.get_pos()
                 if finish.sensor_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0]:
-                    finish_running = False  # 跳出迴圈
+                    finish.finish_running = False  # 跳出迴圈
         screen.fill(WHITE)
         screen.blit(background, (0, 0))  # blit(畫) 第一個是圖片，第二個是位置
         locate_text.reset()
@@ -398,18 +417,12 @@ def show_finish():
         screen.blit(finish.background, (0, HEIGHT - finish.rect.height))
         pygame.display.update()
     time.sleep(0.2)
-# 取的時間物件
 
-clock = pygame.time.Clock()
 
 need_list = [2, 10, 14]
 game = True
 running = True
 first_start = True
-
-
-
-
 
 while game:
     # initial_game()
@@ -433,7 +446,8 @@ while game:
     locate_text = list_TEXT()
     # for event in pygame.event.get():  # 回傳所有動作
     #     if event.type == pygame.MOUSEBUTTONUP:  # 如果按下X ,pygame.QUIT 是按下X後的型態
-    running = True
+    if game:
+        running = True
 
     # 遊戲迴圈
     while running and index < 3:
@@ -444,6 +458,7 @@ while game:
         for event in pygame.event.get():     # 回傳所有動作
             if event.type == pygame.QUIT:    # 如果按下X ,pygame.QUIT 是按下X後的型態
                 running = False             # 跳出迴圈
+                game = False
         # 更新顯示
         screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
         all_sprites.update()
@@ -466,27 +481,20 @@ while game:
                 all_sprites.add(great)
         all_sprites.draw(screen)
         pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
-    if index < 3:
-        try_again_func()
-        add5.kill()
-        add7.kill()
-        Sqrt.kill()
-        bottom_line.kill()
-    else:
-        add5.kill()
-        add7.kill()
-        Sqrt.kill()
-        bottom_line.kill()
-        show_finish()
-        first_start = True
-    # reset all sprites
+    if game:
+        if index < 3:
+            try_again_func()
+            add5.kill()
+            add7.kill()
+            Sqrt.kill()
+            bottom_line.kill()
+        else:
+            add5.kill()
+            add7.kill()
+            Sqrt.kill()
+            bottom_line.kill()
+            show_finish()
+            first_start = True
 
-end = False
-while end:
-    for event in pygame.event.get():     # 回傳所有動作
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                end = False  # 跳出迴圈
 pygame.mixer.music.stop()
-
 pygame.quit()
