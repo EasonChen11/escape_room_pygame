@@ -24,9 +24,9 @@ pygame.display.set_icon(icon_image)
 all_sprites = pygame.sprite.Group()
 
 # 背景音樂
-pygame.mixer.init()
-pygame.mixer.music.load(f"./music/{random.randrange(0, 6)}.mp3")
-pygame.mixer.music.play()
+# pygame.mixer.init()
+# pygame.mixer.music.load(f"./music/{random.randrange(0, 6)}.mp3")
+# pygame.mixer.music.play()
 
 # 載入圖片 convert 轉成pygame 易讀檔案
 background = pygame.image.load("./img/background450.png").convert()
@@ -503,5 +503,5 @@ while game:
             running = False
             first_start = True
 
-pygame.mixer.music.stop()
+# pygame.mixer.music.stop()
 pygame.quit()
