@@ -301,26 +301,14 @@ class Finish():
         self.color = [BLACK, BLACK, BLACK, RED]
         # screen.blit(self.image, self.rect.center)
 
-    # def update(self):
-    #     self.image = self.origin_image
-    #     self.rect = self.image.get_rect(center=(WIDTH/2, 500))
-    #     font = pygame.font.Font(font_name, self.size[0])  # 給定字型和大小# font:字型 render:使成為
-    #     text_surface = font.render(self.text[0], True, self.color[0])  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
-    #     text_rect = text_surface.get_rect()
-    #     text_rect.left = self.rect.left
-    #     text_rect.centery = self.rect.centery
-    #     self.image.blit(text_surface, text_rect)
-
-        # for a in range(3):
-        #     font = pygame.font.Font(font_name, self.size[a])  # 給定字型和大小# font:字型 render:使成為
-        #     text_surface = font.render(self.text[a], True, self.color[a])  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
-        #     text_rect = text_surface.get_rect()
-        #     text_rect.centerx = 0
-        #     text_rect.centery = 500
-        #     self.image.blit(text_surface, text_rect)
-    #     self.draw()
-    #
-    # def draw(self):
+    def draw(self):
+        for a in range(4):
+            font = pygame.font.Font(font_name, self.size[a])  # 給定字型和大小# font:字型 render:使成為
+            text_surface = font.render(self.text[a], True, self.color[a])  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+            text_rect = text_surface.get_rect()
+            text_rect.left = 10 + (a//3) * 120
+            text_rect.centery = 20 + 50 * a
+            self.background.blit(text_surface, text_rect)
 
 
 # def initial_game():
@@ -388,13 +376,7 @@ def show_rule():
 
 def show_finish():
     finish = Finish()
-    for a in range(4):
-        font = pygame.font.Font(font_name, finish.size[a])  # 給定字型和大小# font:字型 render:使成為
-        text_surface = font.render(finish.text[a], True, finish.color[a])  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
-        text_rect = text_surface.get_rect()
-        text_rect.left = 10 + (a//3) * 120
-        text_rect.centery = 20 + 50 * a
-        finish.background.blit(text_surface, text_rect)
+    finish.draw()
     finish_running = True
     while finish_running:
         for event in pygame.event.get():  # 回傳所有動作
@@ -449,7 +431,6 @@ while game:
     bottom_line = BottomLine()
     all_sprites.add(bottom_line)
     locate_text = list_TEXT()
-
     # for event in pygame.event.get():  # 回傳所有動作
     #     if event.type == pygame.MOUSEBUTTONUP:  # 如果按下X ,pygame.QUIT 是按下X後的型態
     running = True
