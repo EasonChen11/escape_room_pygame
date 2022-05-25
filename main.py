@@ -71,37 +71,41 @@ class button (pygame.sprite.Sprite):
         self.downx = 1
 
     def update(self):
+        global which_button_click
         mouse_press = pygame.mouse.get_pos()
         if self.click:
             self.animationOfButton()
         else:
             if self.sensor_rect.collidepoint(mouse_press):
                 if pygame.mouse.get_pressed()[0]:
-                    self.keydown = True
-                    global running
-                    self.last_update = pygame.time.get_ticks()
-                    self.click = True
-                    if self.name == 5:
-                        ans_list.append(ans_list[-1] + 5)
-                    if self.name == 7:
-                        ans_list.append(ans_list[-1] + 7)
-                    if self.name == 'sqrt':
-                        append_number = round(sqrt(ans_list[-1]), 2)  # round 四捨五入到小數兩位
-                        if append_number - int(append_number) == 0:
-                            ans_list.append(int(append_number))
-                        else:
-                            ans_list.append(append_number)
+                    if not which_button_click:
+                        which_button_click = True
+                        self.keydown = True
+                        global running
+                        self.last_update = pygame.time.get_ticks()
+                        self.click = True
+                        if self.name == 5:
+                            ans_list.append(ans_list[-1] + 5)
+                        if self.name == 7:
+                            ans_list.append(ans_list[-1] + 7)
+                        if self.name == 'sqrt':
+                            append_number = round(sqrt(ans_list[-1]), 2)  # round 四捨五入到小數兩位
+                            if append_number - int(append_number) == 0:
+                                ans_list.append(int(append_number))
+                            else:
+                                ans_list.append(append_number)
 
-                    if check_list.get(ans_list[-1]):
-                        running = False
-                    else:
-                        check_list[ans_list[-1]] = True
-                    if ans_list[-1] - int(ans_list[-1]) != 0:
-                        running = False
-                    if ans_list[-1] > 50:
-                        running = False
+                        if check_list.get(ans_list[-1]):
+                            running = False
+                        else:
+                            check_list[ans_list[-1]] = True
+                        if ans_list[-1] - int(ans_list[-1]) != 0:
+                            running = False
+                        if ans_list[-1] > 50:
+                            running = False
 
     def animationOfButton(self):
+        global which_button_click
         now = pygame.time.get_ticks()
         if now - self.last_update > self.frame:     # 瞬間當下時間 跟 創建時間差 到換圖時間(ex.時間差到50ms時換下張圖)
             self.last_update = now
@@ -133,7 +137,8 @@ class button (pygame.sprite.Sprite):
                         self.frame = 0
                         self.keydown = True
                         self.click = False
-
+                        self.other_click = False
+                        which_button_click = False
 
 class list_TEXT:
 
@@ -436,6 +441,7 @@ while game:
     index = 0
     ans_list = [5]
     check_list = {5: True}
+    which_button_click = False
     click_rule = Rule()
     if first_start:
         show_rule()
