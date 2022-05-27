@@ -1,5 +1,7 @@
 # https://www.youtube.com/watch?v=61eX0bFAsYs&ab_channel=GrandmaCan-%E6%88%91%E9%98%BF%E5%AC%A4%E9%83%BD%E6%9C%83
 # image https://drive.google.com/drive/folders/10-SA2Fiyf5cm3jUNW2s1zskh0-2eQl9V
+# 字體 https://www.pkstep.com/archives/5693
+# 字體 https://www.twfont.com/chinese/
 import time
 import pygame
 import random
