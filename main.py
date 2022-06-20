@@ -99,12 +99,15 @@ class button (pygame.sprite.Sprite):
 
                         if check_list.get(ans_list[-1]):
                             running = False
+                            which_error["repeat"][1] = True
                         else:
                             check_list[ans_list[-1]] = True
                         if ans_list[-1] - int(ans_list[-1]) != 0:
                             running = False
+                            which_error["decimal"][1] = True
                         if ans_list[-1] > 50:
                             running = False
+                            which_error["big than 50"][1] = True
 
     def animationOfButton(self):
         global which_button_click
@@ -148,11 +151,13 @@ class list_TEXT:
         self.x = WIDTH/4-100
         self.y = 100
         self.length = 0
+        self.index = 0
 
     def reset(self):
         self.x = WIDTH/4-55
         self.y = 100
         self.length = 0
+        self.index = 0
 
     def update(self):
         self.x += 65
@@ -170,6 +175,18 @@ class list_TEXT:
         self.text_rect.centerx = self.x
         self.text_rect.centery = self.y
         surface.blit(self.text_surface, self.text_rect)
+
+    def show(self):
+        self.reset()
+        for i in ans_list:
+            if i in need_list[0:self.index+1:]:
+                self.draw(screen, f"{i}", 50, RED)
+                self.index += 1
+            else:
+                self.draw(screen, f"{i}", 50, BLACK)
+            self.update()
+            if self.length > 5:
+                self.change_line()
 
 
 class BottomLine(pygame.sprite.Sprite):
@@ -208,7 +225,7 @@ class Great(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.last_update = pygame.time.get_ticks()
         self.show_time = 1000
-        self.image = great_background
+        self.image = great_background.copy()
         self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH/2, HEIGHT/2+20)
@@ -224,6 +241,34 @@ class Great(pygame.sprite.Sprite):
             self.draw(self.rect.width/2+10, self.rect.height/2)
         else:
             self.kill()
+
+    def draw(self, x, y):
+        font = pygame.font.Font(font_name, self.size)  # 給定字型和大小# font:字型 render:使成為
+        text_surface = font.render(self.text, True, self.color)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        text_rect = text_surface.get_rect()
+        text_rect.centerx = x
+        text_rect.centery = y
+        self.image.blit(text_surface, text_rect)
+
+
+class Error(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = great_background.copy()
+        self.image.set_colorkey(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH/2, HEIGHT*2/3-20)
+        self.now = pygame.time.get_ticks()
+        for message in which_error:
+            if which_error[message][1]:
+                self.text = which_error[message][0]
+                break
+        self.size = 60
+        self.color = BLACK
+
+    def update(self):
+        self.draw(self.rect.width/2+10, self.rect.height/2)
 
     def draw(self, x, y):
         font = pygame.font.Font(font_name, self.size)  # 給定字型和大小# font:字型 render:使成為
@@ -325,28 +370,30 @@ class Finish:
 
 def try_again_func():
     try_again = TryAgain()
+    error_message = Error()
     all_sprites.add(try_again)
+    all_sprites.add(error_message)
     while try_again.show:
-        clock.tick(FPS)                     # 一秒最多刷新FPS次(1秒跑最多幾次while)
+        clock.tick(FPS)
         for event in pygame.event.get():     # 回傳所有動作
+            if event.type == pygame.QUIT:    # 如果按下X ,pygame.QUIT 是按下X後的型態
+                global running, game
+                running = False             # 跳出迴圈
+                game = False
+                try_again.show = False
             if event.type == pygame.MOUSEBUTTONDOWN:    # 如果按下X ,pygame.QUIT 是按下X後的型態
                 mouse_pos = pygame.mouse.get_pos()
                 if try_again.rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0]:
                     try_again.show = False             # 跳出迴圈
+                    error_message.kill()
         screen.fill(WHITE)
         screen.blit(background, (0, 0))  # blit(畫) 第一個是圖片，第二個是位置
-        locate_text.reset()
-        for i in ans_list:
-            if i in need_list[0:index+1:]:
-                locate_text.draw(screen, f"{i}", 50, RED)
-            else:
-                locate_text.draw(screen, f"{i}", 50, BLACK)
-            locate_text.update()
-            if locate_text.length > 5:
-                locate_text.change_line()
+        locate_text.show()
         try_again.update()
+        error_message.update()
         all_sprites.draw(screen)
         pygame.display.update()
+    try_again.kill()
     time.sleep(0.2)
 
 
@@ -418,15 +465,7 @@ def show_finish():
                     finish.finish_running = False  # 跳出迴圈
         screen.fill(WHITE)
         screen.blit(background, (0, 0))  # blit(畫) 第一個是圖片，第二個是位置
-        locate_text.reset()
-        for i in ans_list:
-            if i in need_list[0:index+1:]:
-                locate_text.draw(screen, f"{i}", 50, RED)
-            else:
-                locate_text.draw(screen, f"{i}", 50, BLACK)
-            locate_text.update()
-            if locate_text.length > 5:
-                locate_text.change_line()
+        locate_text.show()
         screen.blit(finish.background, (0, HEIGHT - finish.rect.height))
         pygame.display.update()
     time.sleep(0.2)
@@ -436,10 +475,13 @@ need_list = [2, 10, 14]
 game = True
 running = False
 first_start = True
+which_error = {"repeat": ["數字重複啦", False], "decimal": ["啥?有小數點", False], "big than 50": ["數字>50啦", False]}
 
 while game:
     # initial_game()
     # set origin
+    for error in which_error:
+        which_error[error][1] = False
     index = 0
     ans_list = [5]
     check_list = {5: True}
@@ -477,20 +519,12 @@ while game:
         screen.blit(background, (0, 0))     # blit(畫) 第一個是圖片，第二個是位置
         all_sprites.update()
         click_rule.update()
-        locate_text.reset()
-        for i in ans_list:
-            if i in need_list[0:index+1:]:
-                locate_text.draw(screen, f"{i}", 50, RED)
-            else:
-                locate_text.draw(screen, f"{i}", 50, BLACK)
-            locate_text.update()
-            if locate_text.length > 5:
-                locate_text.change_line()
+        locate_text.show()
         bottom_line.reset(locate_text.length, len(ans_list)//6)
 
         if need_list[index] == ans_list[-1]:
             index += 1
-            if index < 3:
+            if running:
                 great = Great()
                 all_sprites.add(great)
         all_sprites.draw(screen)
