@@ -35,16 +35,12 @@ background = pygame.image.load("./img/background450.png").convert()
 great_background = pygame.image.load("./img/Great.png").convert()
 try_again_background = pygame.image.load("./img/try_again.png").convert()
 finish_background = pygame.image.load("./img/finish_background.png").convert()
+repeat_image = pygame.image.load("./img/repeat.png").convert()
 button_line_image = []
 for i in range(1, 3):
     Bottom_Line_Image = pygame.image.load(f"./img/bottom_line_{i}.png").convert()
     Bottom_Line_Image.set_colorkey(WHITE)
     button_line_image.append(Bottom_Line_Image)
-
-clock = pygame.time.Clock()
-
-font_name = os.path.join("./font.ttf")  # 取的字型
-number_name = pygame.font.match_font('arial')
 image_scale = 180
 button_image = {5: [], 7: [], 'sqrt': []}
 for j in button_image:
@@ -53,6 +49,10 @@ for j in button_image:
         Button.set_colorkey(WHITE)
         button_image[j].append(pygame.transform.scale(Button, (image_scale, image_scale)))
 
+clock = pygame.time.Clock()
+
+font_name = os.path.join("./font.ttf")  # 取的字型
+number_name = pygame.font.match_font('arial')
 
 class button (pygame.sprite.Sprite):
     def __init__(self, center, button_name):
@@ -343,6 +343,31 @@ class Rule:
         self.text_background.blit(text_surface, text_rect)
 
 
+class Repeat(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        repeat_image.set_colorkey(WHITE)
+        self.image = repeat_image
+        self.image = pygame.transform.scale(self.image, (40, 40))
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH-20, 20)
+        self.happen = False
+
+    def update(self):
+        global running
+        # for event in pygame.event.get():     # 回傳所有動作
+        #     if event.type == pygame.MOUSEBUTTONDOWN:  # 如果按下X ,pygame.QUIT 是按下X後的型態
+        mouse_press = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_press):
+            if pygame.mouse.get_pressed()[0]:
+                screen.fill(WHITE)
+                pygame.display.update()  # 更新畫面=pygame.display.flip()更新全部，update可以有參數
+                time.sleep(0.1)
+                running = False
+                self.happen = True
+
+
 class Finish:
 
     def __init__(self):
@@ -369,6 +394,7 @@ class Finish:
 
 
 def try_again_func():
+    repeat.kill()
     try_again = TryAgain()
     error_message = Error()
     all_sprites.add(try_again)
@@ -402,12 +428,14 @@ def show_rule():
     rule_text.append("1.面板有三個按鈕，+5, +7 和開根號")
     rule_text.append("2.用滑鼠按下按鈕完成謎題")
     rule_text.append("3.計數從5開始")
-    rule_text.append("4.顯示器上要必須依序出現2, 10, 14這三個數字")
+    rule_text.append("4.顯示器上要必須依序出現")
+    rule_text.append("      2, 10, 14這三個數字(如:1,2,10,14...)")
     rule_text.append("5.顯示器上可以顯示任何數字，但有些條件:")
-    rule_text.append("a)同一個數字不能出現兩次(包含第一個5)")
-    rule_text.append("b)顯示器上的數字不能大於50)")
-    rule_text.append("c)不能出現小數(開根號不能有小數)")
+    rule_text.append("      a)同一個數字不能出現兩次(包含第一個5)")
+    rule_text.append("      b)顯示器上的數字不能大於50")
+    rule_text.append("      c)不能出現小數(開根號不能有小數)")
     rule_text.append("6.可以按下左上角'?'顯示規則")
+    rule_text.append("7.可以按下右上角圖示重新開始")
     global running
     if running:
         rule_text.append("按任意鍵繼續遊戲!")
@@ -429,7 +457,7 @@ def show_rule():
             text_rect.left = WIDTH/2 - text_rect.width/2 - 10
         else:
             text_rect.left = 15
-        text_rect.centery = 50 + 55 * l
+        text_rect.centery = 50 + 45 * l
         surface.blit(text_surface, text_rect)
     init_running = True
     while init_running:
@@ -499,6 +527,8 @@ while game:
     all_sprites.add(Sqrt)
     bottom_line = BottomLine()
     all_sprites.add(bottom_line)
+    repeat = Repeat()
+    all_sprites.add(repeat)
     locate_text = list_TEXT()
     # for event in pygame.event.get():  # 回傳所有動作
     #     if event.type == pygame.MOUSEBUTTONUP:  # 如果按下X ,pygame.QUIT 是按下X後的型態
@@ -531,7 +561,10 @@ while game:
         pygame.display.update()                      # 更新畫面=pygame.display.flip()更新全部，update可以有參數
     if game:
         if index < 3:
-            try_again_func()
+            if not repeat.happen:
+                try_again_func()
+            else:
+                repeat.kill()
             add5.kill()
             add7.kill()
             Sqrt.kill()
