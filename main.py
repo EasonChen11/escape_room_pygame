@@ -22,6 +22,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("escape room")    # 視窗標題
 icon_image = pygame.image.load("./img/icon.png").convert()
+icon_image.set_colorkey(WHITE)
 pygame.display.set_icon(icon_image)
 all_sprites = pygame.sprite.Group()
 
