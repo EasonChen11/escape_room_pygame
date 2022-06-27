@@ -57,7 +57,7 @@ font_name = os.path.join("./font.ttf")  # 取的字型
 number_name = pygame.font.match_font('arial')
 
 
-class button(pygame.sprite.Sprite):
+class Button(pygame.sprite.Sprite):
     def __init__(self, center, button_name):
         self.click = False
         pygame.sprite.Sprite.__init__(self)
@@ -149,7 +149,7 @@ class button(pygame.sprite.Sprite):
                         which_button_click = False
 
 
-class list_TEXT:
+class ListText:
 
     def __init__(self):
         self.x = WIDTH / 4 - 100
@@ -427,18 +427,18 @@ def try_again_func():
 
 
 def show_rule():
-    rule_text = []
-    rule_text.append("1.面板有三個按鈕，+5, +7 和開根號")
-    rule_text.append("2.用滑鼠按下按鈕完成謎題")
-    rule_text.append("3.計數從5開始")
-    rule_text.append("4.顯示器上要必須依序出現")
-    rule_text.append("      2, 10, 14這三個數字(如:1,2,10,14...)")
-    rule_text.append("5.顯示器上可以顯示任何數字，但有些條件:")
-    rule_text.append("      a)同一個數字不能出現兩次(包含第一個5)")
-    rule_text.append("      b)顯示器上的數字不能大於50")
-    rule_text.append("      c)不能出現小數(開根號不能有小數)")
-    rule_text.append("6.可以按下左上角'?'顯示規則")
-    rule_text.append("7.可以按下右上角圖示重新開始")
+    rule_text = ["規則",
+                 "1.面板有三個按鈕，+5, +7 和開根號",
+                 "2.用滑鼠按下按鈕完成謎題",
+                 "3.計數從5開始",
+                 "4.顯示器上要必須依序不用連續出現",
+                 "      2, 10, 14這三個數字(如:1,2,6,10,21,14...)",
+                 "5.顯示器上可以顯示任何數字，但有些條件:",
+                 "      a)同一個數字不能出現兩次(包含第一個5)",
+                 "      b)顯示器上的數字不能大於50",
+                 "      c)不能出現小數(開根號不能有小數)",
+                 "6.可以按下左上角'?'顯示規則",
+                 "7.可以按下右上角圖示重新開始"]
     global running
     if running:
         rule_text.append("按任意鍵繼續遊戲!")
@@ -449,9 +449,13 @@ def show_rule():
     surface.fill((232, 255, 255))
     surface.get_rect(center=(0, 0))
     for l in range(len(rule_text)):
-        if l == len(rule_text) - 1:
+        if l == len(rule_text) - 1 :
             font = pygame.font.Font(font_name, 50)  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(rule_text[l], True, RED)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+        elif l == 0:
+            font = pygame.font.Font(font_name, 50)  # 給定字型和大小# font:字型 render:使成為
+            text_surface = font.render(rule_text[l], True, (163, 92, 219))  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
+
         else:
             font = pygame.font.Font(font_name, 20)  # 給定字型和大小# font:字型 render:使成為
             text_surface = font.render(rule_text[l], True, BLACK)  # 製造文字平面(文字,Anti-aliasing{抗鋸齒文字},字體顏色)
@@ -460,7 +464,7 @@ def show_rule():
             text_rect.left = WIDTH / 2 - text_rect.width / 2 - 10
         else:
             text_rect.left = 15
-        text_rect.centery = 50 + 45 * l
+        text_rect.centery = 30 + 45 * l
         surface.blit(text_surface, text_rect)
     init_running = True
     while init_running:
@@ -507,6 +511,7 @@ game = True
 running = False
 first_start = True
 which_error = {"repeat": ["數字重複啦", False], "decimal": ["啥?有小數點", False], "big than 50": ["數字>50啦", False]}
+locate_text = ListText()
 
 while game:
     # initial_game()
@@ -514,6 +519,7 @@ while game:
     for error in which_error:
         which_error[error][1] = False
     index = 0
+    running = True
     ans_list = [5]
     check_list = {5: True}
     which_button_click = False
@@ -522,21 +528,16 @@ while game:
         show_rule()
         first_start = False
     # create sprites
-    add5 = button((image_scale / 2 - 16, HEIGHT - image_scale / 2), 5)
+    add5 = Button((image_scale / 2 - 16, HEIGHT - image_scale / 2), 5)
     all_sprites.add(add5)
-    add7 = button((WIDTH / 2 + 4, HEIGHT - image_scale / 2), 7)
+    add7 = Button((WIDTH / 2 + 4, HEIGHT - image_scale / 2), 7)
     all_sprites.add(add7)
-    Sqrt = button((WIDTH - image_scale / 2 + 17, HEIGHT - image_scale / 2), 'sqrt')
+    Sqrt = Button((WIDTH - image_scale / 2 + 17, HEIGHT - image_scale / 2), 'sqrt')
     all_sprites.add(Sqrt)
     bottom_line = BottomLine()
     all_sprites.add(bottom_line)
     repeat = Repeat()
     all_sprites.add(repeat)
-    locate_text = list_TEXT()
-    # for event in pygame.event.get():  # 回傳所有動作
-    #     if event.type == pygame.MOUSEBUTTONUP:  # 如果按下X ,pygame.QUIT 是按下X後的型態
-    if game:
-        running = True
 
     # 遊戲迴圈
     while running and index < 3:
@@ -572,6 +573,7 @@ while game:
             add7.kill()
             Sqrt.kill()
             bottom_line.kill()
+            locate_text.__init__()
         else:
             add5.kill()
             add7.kill()
