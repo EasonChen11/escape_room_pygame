@@ -528,6 +528,7 @@ need_list = [2, 10, 14]
 game = True
 running = False
 first_start = True
+which_button_click = False
 which_error = {"repeat": ["數字重複啦", False], "decimal": ["啥?有小數點", False], "big than 50": ["數字>50啦", False]}
 locate_text = ListText()
 rule = Rule()
@@ -540,7 +541,6 @@ while game:
     index = 0
     ans_list = [5]
     check_list = {5: True}
-    which_button_click = False
     if first_start:
         show_rule()
         first_start = False
