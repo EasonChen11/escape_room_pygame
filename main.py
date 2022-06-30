@@ -89,8 +89,6 @@ class Button(pygame.sprite.Sprite):
                         global running
                         self.last_update = pygame.time.get_ticks()
                         self.click = True
-                        self.input()
-                        self.check_which_error()
 
     def input(self):
         if self.name == 5:
@@ -134,6 +132,7 @@ class Button(pygame.sprite.Sprite):
                     self.rect.x -= self.downx
                 else:
                     self.keydown = False
+                    self.input()
             else:
                 if not pygame.mouse.get_pressed()[0]:
                     self.frame -= 1
@@ -152,6 +151,7 @@ class Button(pygame.sprite.Sprite):
                         self.keydown = True
                         self.click = False
                         which_button_click = False
+                        self.check_which_error()
 
 
 class ListText:
