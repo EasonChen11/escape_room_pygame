@@ -578,7 +578,7 @@ while game:
 
         if need_list[index] == ans_list[-1] and index < 3:
             index += 1
-            if running:
+            if not check_list.get(ans_list[-1]):
                 great = Great()
                 all_sprites.add(great)
         all_sprites.draw(screen)
